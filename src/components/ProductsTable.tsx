@@ -2,7 +2,7 @@
 /** @jsx jsx */
 import { jsx, css } from "@emotion/react";
 import { applyFieldOverrides, DataFrame, FieldType, GrafanaTheme2, ThresholdsMode, Vector } from "@grafana/data";
-import { PanelContainer, Table, useTheme2 } from "@grafana/ui";
+import { PanelContainer, Table, TableCellDisplayMode, useTheme2 } from "@grafana/ui";
 import { FC } from "react"
 import { Product } from "../contexts/products"
 
@@ -18,7 +18,11 @@ const styles = {
 
 const mapBy = (fieldName: string) => {
     return (row: any) => {
-        return row[fieldName];
+        const rowValue = row[fieldName]
+        if (fieldName === 'images' && rowValue) {
+            return rowValue[0];
+        }
+        return rowValue;
     }
 }
 
@@ -84,14 +88,14 @@ function buildData(theme: GrafanaTheme2, rows: Product[]): DataFrame {
                 values: new ProductVector(rows, 'rating'), config: {
                     custom: {
                         align: 'center',
-                        displayMode: 'basic',
+                        displayMode: TableCellDisplayMode.BasicGauge,
                     },
                     min: 0,
                     max: 5,
                     thresholds: {
                         mode: ThresholdsMode.Absolute,
-                        steps: [{ value: 1, color: 'red' },{ value: 2, color: 'orange' },{ value: 3, color: 'yellow' },{ value: 4, color: 'blue' }, { value: 5, color: 'green' }],
-                      },
+                        steps: [{ value: 1, color: 'red' }, { value: 2, color: 'orange' }, { value: 3, color: 'yellow' }, { value: 4, color: 'blue' }, { value: 5, color: 'green' }],
+                    },
                 },
             },
             {
@@ -121,6 +125,17 @@ function buildData(theme: GrafanaTheme2, rows: Product[]): DataFrame {
                     },
                 },
             },
+            {
+                name: 'Thumbnails',
+                type: FieldType.string,
+                values: new ProductVector(rows, 'images'), config: {
+                    custom: {
+                        align: 'center',
+                        displayMode: TableCellDisplayMode.Image
+                    },
+
+                },
+            },
         ],
         length: rows.length
     });
@@ -131,10 +146,10 @@ function buildData(theme: GrafanaTheme2, rows: Product[]): DataFrame {
         theme,
         replaceVariables: (v: string) => v,
         fieldConfig: {
-          defaults: {},
-          overrides: [],
+            defaults: {},
+            overrides: [],
         },
-      })[0];
+    })[0];
 
     return data;
 };
