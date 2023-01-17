@@ -1,10 +1,20 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 import { jsx, css } from "@emotion/react";
-import { DataFrame, FieldType, getDisplayProcessor, GrafanaTheme2, MutableDataFrame, Vector } from "@grafana/data";
+import { applyFieldOverrides, DataFrame, FieldType, GrafanaTheme2, ThresholdsMode, Vector } from "@grafana/data";
 import { PanelContainer, Table, useTheme2 } from "@grafana/ui";
 import { FC } from "react"
 import { Product } from "../contexts/products"
+
+const styles = {
+    wrapper: css`
+        margin: auto;
+        padding: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        `
+}
 
 const mapBy = (fieldName: string) => {
     return (row: any) => {
@@ -30,48 +40,114 @@ class ProductVector implements Vector {
 }
 
 function buildData(theme: GrafanaTheme2, rows: Product[]): DataFrame {
-    const data: DataFrame = ({
+    let data: DataFrame = ({
         fields: [
-            { name: 'id', type: FieldType.number, values: new ProductVector(rows, 'id'), config: {} },
             {
-                name: 'Description',
+                name: 'id', type: FieldType.number, values: new ProductVector(rows, 'id'), config: {
+                    custom: {
+                        align: 'center',
+                    }
+                }
+            },
+            {
+                name: 'Title',
                 type: FieldType.string,
-                values: new ProductVector(rows, 'description'), config: {},
+                values: new ProductVector(rows, 'title'), config: {
+                    custom: {
+                        align: 'center',
+                    },
+                },
             },
             {
                 name: 'Price',
                 type: FieldType.string,
-                values: new ProductVector(rows, 'price'), config: {},
+                values: new ProductVector(rows, 'price'), config: {
+                    custom: {
+                        align: 'center',
+                    },
+                },
 
             },
             {
                 name: 'Discount %',
-                type: FieldType.string,
-                values: new ProductVector(rows, 'discountPercentage'), config: {},
+                type: FieldType.number,
+                values: new ProductVector(rows, 'discountPercentage'), config: {
+                    unit: 'percent',
+                    custom: {
+                        align: 'center',
+                    },
+                },
             },
-        ], length: 4
+            {
+                name: 'Rating',
+                type: FieldType.number,
+                values: new ProductVector(rows, 'rating'), config: {
+                    custom: {
+                        align: 'center',
+                        displayMode: 'basic',
+                    },
+                    min: 0,
+                    max: 5,
+                    thresholds: {
+                        mode: ThresholdsMode.Absolute,
+                        steps: [{ value: 1, color: 'red' },{ value: 2, color: 'orange' },{ value: 3, color: 'yellow' },{ value: 4, color: 'blue' }, { value: 5, color: 'green' }],
+                      },
+                },
+            },
+            {
+                name: 'Stock',
+                type: FieldType.string,
+                values: new ProductVector(rows, 'stock'), config: {
+                    custom: {
+                        align: 'center',
+                    },
+                },
+            },
+            {
+                name: 'Brand',
+                type: FieldType.string,
+                values: new ProductVector(rows, 'brand'), config: {
+                    custom: {
+                        align: 'center',
+                    },
+                },
+            },
+            {
+                name: 'Category',
+                type: FieldType.string,
+                values: new ProductVector(rows, 'category'), config: {
+                    custom: {
+                        align: 'center',
+                    },
+                },
+            },
+        ],
+        length: rows.length
     });
-    data.fields.forEach(field => {
-        field.display = getDisplayProcessor({ field, theme });
-    });
+
+
+    data = applyFieldOverrides({
+        data: [data],
+        theme,
+        replaceVariables: (v: string) => v,
+        fieldConfig: {
+          defaults: {},
+          overrides: [],
+        },
+      })[0];
+
     return data;
 };
 
-
 interface ProductsTableProps { products: Product[], loading: boolean, errors: string[] };
 
-export const ProductsTable: FC<ProductsTableProps> = ({ products, loading, errors }) => {
+export const ProductsTable: FC<ProductsTableProps> = ({ products }) => {
     const theme = useTheme2();
     const data = buildData(theme, products);
 
-    const styles = {
-        wrapper: css`background-color: ${theme.colors.background.primary};`
-    }
-
     return <div css={styles.wrapper}>
-        <PanelContainer>
-            <h2>{products.length} Products</h2>
-            <Table data={data} width={1500} height={500}></Table>
+        <PanelContainer title={'Products'}>
+            <Table data={data} width={1400} height={38 * data.length}></Table>
         </PanelContainer>
     </div>
 
