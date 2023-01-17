@@ -1,7 +1,6 @@
 import {
     createContext,
     FC,
-    PropsWithChildren,
     useContext,
     useReducer,
 } from "react";
@@ -115,7 +114,7 @@ const DispatchContext = createContext<{ dispatch: ProductDispatcher }>({
 });
 
 const ProductStoreProvider: FC<
-    PropsWithChildren & { value?: ProductsStore }
+    { value?: ProductsStore }
 > = ({ children, value: initialState }) => {
     const defaultInitialState: ProductsStore = {
         products: [],
@@ -140,8 +139,6 @@ function useProductStore() {
     const { dispatch } = useContext(DispatchContext);
     return { store: useContext(ProductsContext), dispatch };
 }
-
-
 
 export { ProductStoreProvider, useProductStore, getProducts };
 
